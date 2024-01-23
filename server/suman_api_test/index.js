@@ -1,25 +1,34 @@
-// index.js
+const fs = require('fs');
+
 const Web3 = require('web3');
+const web3 = new Web3.Web3('http://127.0.0.1:8545');
 
-// Initialize web3
-const web3 = new Web3('http://localhost:8545'); // Replace with your Ethereum node URL
+const contractName = 'SimpleStorage';
+const artifactPath = `./artifacts/contracts/${contractName}.sol/${contractName}.json`;
 
-// Contract ABI and Address
-const contractABI = [/* ... ABI ... */];
-const contractAddress = '0x...'; // Deployed contract address
+const artifact = JSON.parse(fs.readFileSync(artifactPath, 'utf8'));
+const contractABI = artifact.abi;
+//console.log(JSON.stringify(contractABI, null, 2));
+const contractAddress = '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0'; // Deployed contract address
 
-// Create contract instance
 const myContract = new web3.eth.Contract(contractABI, contractAddress);
 
-// Example function to interact with the contract
 async function readContractData() {
     try {
-        // Replace 'myMethod' with your contract's method and parameters
-        const result = await myContract.methods.myMethod().call();
-        console.log("Contract method output:", result);
+        // Read the initial value
+        let result = await myContract.methods.get().call();
+        console.log("Initial contract method output:", Number(result));
+
+        // Send a transaction to change the state
+        await myContract.methods.set(600).send({ from: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266' });
+
+        // Read the updated value
+        result = await myContract.methods.get().call();
+        console.log("Updated contract method output:", Number(result))
     } catch (error) {
-        console.error(`Error reading from contract: ${error.message}`);
+        console.error(`Error interacting with the contract: ${error.message}`);
     }
 }
+
 
 readContractData();
